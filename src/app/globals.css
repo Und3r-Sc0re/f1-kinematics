@@ -1,26 +1,184 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Surfaces — matte black through to lifted glass. */
+  --color-void: #050506;
+  --color-surface: #0b0c0e;
+  --color-surface-2: #121316;
+  --color-surface-3: #1a1c20;
+  --color-line: rgba(255, 255, 255, 0.07);
+  --color-line-strong: rgba(255, 255, 255, 0.14);
+
+  /* Type. */
+  --color-ink: #edeef0;
+  --color-muted: #8a8f98;
+  --color-dim: #5a5f68;
+
+  /* Telemetry accents. Used sparingly — they carry meaning, not decoration. */
+  --color-ferrari: #ff2d16;
+  --color-papaya: #ff8a00;
+  --color-cyan: #00d2be;
+  --color-drs: #00ff87;
+  --color-amber: #ffc400;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+
+  /* One easing curve for the whole site. Consistency is what reads as expensive. */
+  --ease-telemetry: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    --hud-glow: 0 0 24px rgba(0, 210, 190, 0.18);
+  }
+
+  html {
+    /* Lenis drives scrolling; native smooth scroll would fight it. */
+    scroll-behavior: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  /* Numbers never reflow as they count. */
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  ::selection {
+    background: var(--color-cyan);
+    color: #000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Skip link — visible only when focused. */
+  .skip-link {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    translate: -50% -120%;
+    z-index: 200;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-cyan);
+    color: #000;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: translate 0.3s var(--ease-telemetry);
+  }
+  .skip-link:focus-visible {
+    translate: -50% 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility panel {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--color-surface-2) 92%, transparent),
+    color-mix(in oklab, var(--color-surface) 96%, transparent)
+  );
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(14px);
+}
+
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+
+/* Carbon-weave texture. Two crossed micro-gradients, no image request. */
+@utility carbon {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.022) 0 1px,
+      transparent 1px 4px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.022) 0 1px,
+      transparent 1px 4px
+    );
+}
+
+/* Faint engineering grid used behind full-bleed sections. */
+@utility grid-lines {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+/*
+ * High-contrast mode. Toggled by the accessibility control, not the OS, because
+ * the OS-level setting is not exposed reliably across browsers.
+ */
+[data-contrast="high"] {
+  --color-ink: #ffffff;
+  --color-muted: #d4d7dc;
+  --color-dim: #b0b5bd;
+  --color-line: rgba(255, 255, 255, 0.28);
+  --color-line-strong: rgba(255, 255, 255, 0.45);
+  --color-surface: #000000;
+  --color-void: #000000;
+}
+
+/*
+ * Reduced motion. Animation that conveys information (graph traces, the car
+ * moving along the lap) is retained but shortened; purely decorative motion
+ * — parallax, floating, shimmer — is removed entirely.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+[data-motion="reduced"] .decorative {
+  animation: none !important;
+  transform: none !important;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
