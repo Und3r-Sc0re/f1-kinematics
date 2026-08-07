@@ -40,7 +40,7 @@ const desired = new THREE.Vector3();
 const lookAt = new THREE.Vector3();
 const smoothedLook = new THREE.Vector3();
 
-type Cast = { height: number; surface: "asphalt" | "kerb" | "grass" | "snow" | "ice" };
+type Cast = { height: number; surface: "asphalt" | "kerb" | "grass" | "offtrack" };
 
 /** One downward raycast: ground height and, from the texture UV, the surface type. */
 function castDown(collider: THREE.Object3D, x: number, z: number, fromY: number): Cast | null {

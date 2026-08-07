@@ -5,9 +5,10 @@ import type { SurfaceKind } from "./spec";
  *
  * The track is a palette-textured low-poly model: every face maps to a swatch on
  * one shared image, so the colour under a point tells you what that point is —
- * dark grey is asphalt, white is snow, green is grass. That is exactly the
- * information needed for track limits, and it comes for free from the texture
- * the model already ships with, with no separate collision data to author.
+ * grey (light or dark) is pavement, green is grass, blue is scenery/water. That
+ * is exactly the information needed for track limits, and it comes for free
+ * from the texture the model already ships with, with no separate collision
+ * data to author.
  *
  * The image is drawn once to a small canvas so pixels can be read back; each
  * ground raycast then returns a UV, and this classifies the pixel there.
@@ -47,10 +48,15 @@ export class SurfaceSampler {
   /**
    * Classifies the surface at a UV coordinate.
    *
-   * The rules are generic rather than tied to specific swatch positions: grey
-   * (low colour saturation) and dark is road; grey and bright is snow; a green
-   * cast is grass. This keeps it working regardless of exactly where the road
-   * swatch sits in the palette.
+   * The rules are generic rather than tied to specific swatch positions or
+   * theme. Any low-saturation swatch — from near-black tarmac through to
+   * bright white lane paint or sun-bleached concrete — is pavement: a kit's
+   * greyscale ramp spans that whole range for what is structurally all "hard
+   * surface", so splitting it by brightness (an earlier version of this
+   * classifier did, treating the lighter half as ice) was what walled the car
+   * in the moment it spawned on a light-coloured patch of track. Saturated
+   * hues are what actually separate drivable from not: green is grass, blue
+   * is water or background scenery, warm red/orange is a kerb stripe.
    */
   classify(u: number, v: number): SurfaceKind {
     const data = this.data;
@@ -65,15 +71,11 @@ export class SurfaceSampler {
     const lum = 0.299 * r + 0.587 * g + 0.114 * b;
     const sat = Math.max(r, g, b) - Math.min(r, g, b);
 
-    if (sat < 30) {
-      if (lum > 210) return "ice"; // bright, colourless: packed snow / ice
-      if (lum < 135) return "asphalt"; // dark grey: road
-      return "snow"; // mid grey: run-off
-    }
+    if (sat < 30) return "asphalt"; // grey at any brightness: pavement
     if (g > r && g > b) return "grass";
-    // Warm colours (kerb reds/oranges) or anything else: treat as a kerb strip.
-    if (r > 150 && lum < 200) return "kerb";
-    return "snow";
+    if (b > r && b > g) return "offtrack"; // water / sky / distant scenery
+    if (r > 150 && lum < 210) return "kerb"; // warm red/orange stripe
+    return "offtrack";
   }
 }
 

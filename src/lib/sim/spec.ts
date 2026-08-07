@@ -87,22 +87,21 @@ export const SURFACE = {
  * Grip and drag by surface type. The surface under the car is read from the
  * circuit texture each frame (see surface.ts), which is what enforces track
  * limits: leave the asphalt and the grip drops, so pushing too hard through a
- * corner runs you wide onto the snow and costs you time.
+ * corner runs you wide onto the grass and costs you time.
  */
-export type SurfaceKind = "asphalt" | "kerb" | "grass" | "snow" | "ice";
+export type SurfaceKind = "asphalt" | "kerb" | "grass" | "offtrack";
 
 export const SURFACE_GRIP: Record<SurfaceKind, { grip: number; drag: number }> = {
   asphalt: { grip: 1.0, drag: 0 },
   kerb: { grip: 0.85, drag: 1.4 },
-  grass: { grip: 0.55, drag: 3.2 },
-  snow: { grip: 0.42, drag: 4.5 },
-  ice: { grip: 0.28, drag: 0.6 },
+  grass: { grip: 0.5, drag: 3.4 },
+  offtrack: { grip: 0.4, drag: 3.8 },
 };
 
 /**
  * The car may drive on the racing surface and its kerbs, and nothing else.
  * Everything beyond is walled off by an invisible barrier at the track edge —
- * the car crashes into it rather than driving onto the snow.
+ * the car crashes into it rather than driving onto the grass.
  */
 export function isDrivable(surface: SurfaceKind): boolean {
   return surface === "asphalt" || surface === "kerb";

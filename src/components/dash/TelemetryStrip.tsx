@@ -53,8 +53,7 @@ const SURFACE_LABEL: Record<string, { text: string; color: string }> = {
   asphalt: { text: "ON TRACK", color: "var(--color-drs)" },
   kerb: { text: "KERB", color: "var(--color-amber)" },
   grass: { text: "OFF · GRASS", color: "var(--color-papaya)" },
-  snow: { text: "OFF · SNOW", color: "var(--color-ferrari)" },
-  ice: { text: "ICE", color: "var(--color-cyan)" },
+  offtrack: { text: "OFF TRACK", color: "var(--color-ferrari)" },
 };
 
 /** Track-limits indicator — flashes a barrier warning on an edge impact. */

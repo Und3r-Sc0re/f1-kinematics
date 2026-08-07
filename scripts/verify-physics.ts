@@ -47,15 +47,15 @@ console.log("\nBRAKING 234 -> 50 km/h (arcade)");
 console.log("  distance     ", (sim.distance - d0).toFixed(0), "m");
 console.log("  peak decel   ", toG(peak).toFixed(2), "g");
 
-// --- Track limits: driving onto snow --------------------------------------
+// --- Track limits: driving off the racing surface --------------------------
 reset(); sim.speed = 55;
-const snow: GroundProbe = { hit: true, height: 0, surface: "snow", gradeForward: 0, gradeRight: 0 };
+const grass: GroundProbe = { hit: true, height: 0, surface: "grass", gradeForward: 0, gradeRight: 0 };
 Object.assign(keys, { throttle: false, brake: false, left: false, right: false });
 const vBefore = msToKmh(sim.speed);
-for (let i = 0; i < 2 / DT; i++) { snow.height = sim.position.y; stepSim(DT, keys, snow); }
-console.log("\nTRACK LIMITS — coasting 2 s on snow");
+for (let i = 0; i < 2 / DT; i++) { grass.height = sim.position.y; stepSim(DT, keys, grass); }
+console.log("\nTRACK LIMITS — coasting 2 s on grass");
 console.log("  grip scale   ", sim.gripScale.toFixed(2), "(asphalt 1.0)");
-console.log("  speed        ", vBefore.toFixed(0), "->", msToKmh(sim.speed).toFixed(0), "km/h  (snow drag should bleed speed)");
+console.log("  speed        ", vBefore.toFixed(0), "->", msToKmh(sim.speed).toFixed(0), "km/h  (grass drag should bleed speed)");
 console.log("  surface      ", sim.surface);
 
 // --- Cornering ------------------------------------------------------------
