@@ -4,8 +4,9 @@ import { useMemo } from "react";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { DRACO_PATH } from "./TrackModel";
+import { assetPath } from "@/lib/utils/assetPath";
 
-export const CAR_URL = "/models/car.glb";
+export const CAR_URL = assetPath("/models/car.glb");
 
 /**
  * The low-poly car is 230 units long and points along −Z. Regulation length is

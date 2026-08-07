@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # NEXT_PUBLIC_BASE_PATH must match the repo name: GitHub Pages serves a
+      # project site at https://<user>.github.io/<repo>/, so every asset URL
+      # baked into the build needs that prefix (see next.config.ts and
+      # src/lib/utils/assetPath.ts).
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /f1-kinematics
+      # `output: "export"` in next.config.ts writes static HTML/JS/CSS to out/
+      # instead of building a server, since Pages only serves static files.
+      - run: touch out/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -5,11 +5,12 @@ import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { installBVH } from "./bvh";
 import { surfaceSampler } from "@/lib/sim/surface";
+import { assetPath } from "@/lib/utils/assetPath";
 
 installBVH();
 
-export const TRACK_URL = "/models/track.glb";
-export const DRACO_PATH = "/draco/";
+export const TRACK_URL = assetPath("/models/track.glb");
+export const DRACO_PATH = assetPath("/draco/");
 
 /**
  * The low-poly arctic circuit is authored at roughly 28 km across, so it is
