@@ -305,7 +305,11 @@ function refineSpawn(collider: THREE.Object3D): boolean {
   let bx = sim.position.x;
   let bz = sim.position.z;
   let by = first.height;
-  let onRoad = first.surface === "asphalt";
+  // isDrivable() (asphalt or kerb), not a bare "asphalt" check: the start grid
+  // is painted in the same red/white kerb pattern used at corners, so an
+  // asphalt-only test can land its very first sample on a kerb square and
+  // conclude the car isn't on the road at all.
+  let onRoad = isDrivable(first.surface);
 
   if (!onRoad) {
     outer: for (let r = 4; r <= 60 && !onRoad; r += 4) {
@@ -314,7 +318,7 @@ function refineSpawn(collider: THREE.Object3D): boolean {
         const x = sim.position.x + Math.cos(ang) * r;
         const z = sim.position.z + Math.sin(ang) * r;
         const c = castDown(collider, x, z, sim.position.y);
-        if (c && c.surface === "asphalt") {
+        if (c && isDrivable(c.surface)) {
           bx = x;
           bz = z;
           by = c.height;
@@ -325,7 +329,41 @@ function refineSpawn(collider: THREE.Object3D): boolean {
     }
   }
 
-  // Heading: whichever direction keeps the most asphalt ahead.
+  // Centre the spawn point on the road before picking a heading. A point can
+  // technically be "on" the drivable surface while sitting right at its edge
+  // (a car's width from the boundary) — exactly where the barrier would catch
+  // the car on its very first frame. This uses the same ring-sampling idea as
+  // resolveBarrier: pull toward the mean direction of nearby drivable ground
+  // until the spawn point is solidly surrounded, not balanced on the line.
+  for (let pass = 0; pass < 3; pass++) {
+    let nx = 0;
+    let nz = 0;
+    let clear = 0;
+    for (let a = 0; a < 12; a++) {
+      const ang = (a / 12) * Math.PI * 2;
+      const s = castDown(collider, bx + Math.cos(ang) * RING_R, bz + Math.sin(ang) * RING_R, by);
+      if (s && isDrivable(s.surface)) {
+        nx += Math.cos(ang);
+        nz += Math.sin(ang);
+        clear += 1;
+      }
+    }
+    if (clear === 12) break; // already fully surrounded by drivable ground
+    const len = Math.hypot(nx, nz);
+    if (len < 0.01) break; // symmetric — no clear direction to centre toward
+    const cx = bx + (nx / len) * 1.2;
+    const cz = bz + (nz / len) * 1.2;
+    const c = castDown(collider, cx, cz, by);
+    if (!c || !isDrivable(c.surface)) break; // don't nudge off the surface
+    bx = cx;
+    bz = cz;
+    by = c.height;
+  }
+
+  // Heading: whichever direction keeps the most drivable surface ahead. Using
+  // the same isDrivable() rule as resolveBarrier is what stops a kerb stripe
+  // right at the spawn point from truncating every candidate's run to zero
+  // and leaving the car facing an arbitrary, possibly wrong, direction.
   let bestYaw = SPAWN_YAW;
   let bestRun = -1;
   for (let a = 0; a < 16; a++) {
@@ -335,7 +373,7 @@ function refineSpawn(collider: THREE.Object3D): boolean {
     let run = 0;
     for (let d = 4; d <= 40; d += 4) {
       const c = castDown(collider, bx + fx * d, bz + fz * d, by);
-      if (c && c.surface === "asphalt") run = d;
+      if (c && isDrivable(c.surface)) run = d;
       else break;
     }
     if (run > bestRun) {
